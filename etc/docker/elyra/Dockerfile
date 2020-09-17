@@ -21,13 +21,15 @@ FROM jupyterhub/k8s-singleuser-sample:0.9.0
 USER root
 
 ADD start-elyra.sh /usr/local/bin/start-elyra.sh
+ADD start-elyra-on-cloud.sh /usr/local/bin/start-elyra-on-cloud.sh
 
 RUN chmod ugo+x /usr/local/bin/start-elyra.sh && \
-    apt-get update && apt-get install -y build-essential curl && \
+    apt-get update && apt-get install -y build-essential curl s3fs && \
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add - && \
     echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list && \
     apt-get update && apt-get install -y yarn && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    echo "jovyan ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 USER $NB_USER
 

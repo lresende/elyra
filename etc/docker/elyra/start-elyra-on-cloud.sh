@@ -25,4 +25,6 @@ echo "Gateway URL: " ${JUPYTER_GATEWAY_URL}
 
 echo "${@: -1}"
 
-. /usr/local/bin/start-singleuser.sh $*
+sudo s3fs jupyter-notebooks /home/jovyan/work -o uid=1000 -o gid=100 -o allow_other -o passwd_file=/home/jovyan/.s3/.passwd-s3fs -o url=https://s3.us.cloud-object-storage.appdomain.cloud
+
+. /usr/local/bin/start.sh jupyter lab --debug $*

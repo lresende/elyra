@@ -150,7 +150,7 @@ release: dist-ui build-server ## Build wheel file for release
 docker-image: ## Build docker image
 	@mkdir -p build/docker
 	cp etc/docker/elyra/Dockerfile build/docker/Dockerfile
-	cp etc/docker/elyra/start-elyra.sh build/docker/start-elyra.sh
+	cp etc/docker/elyra/*.sh build/docker/
 	DOCKER_BUILDKIT=1 docker build -t $(IMAGE) build/docker/ --progress plain
 
 validate-runtime-images: ## Validates delivered runtime-images meet minimum criteria
