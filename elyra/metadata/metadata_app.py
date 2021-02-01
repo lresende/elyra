@@ -17,9 +17,11 @@ import sys
 
 from jsonschema import ValidationError
 
+from elyra.util.app_utils import AppBase, CliOption, Flag
+
 from .error import MetadataNotFoundError
-from .metadata_app_utils import AppBase, CliOption, Flag, SchemaProperty, MetadataSchemaProperty
 from .metadata import Metadata
+from .metadata_app_utils import SchemaProperty, MetadataSchemaProperty
 from .manager import MetadataManager
 from .schema import SchemaManager
 

@@ -249,4 +249,4 @@ class RuntimePipelineProcess(PipelineProcessor):
                 return MetadataManager(namespace=namespace).get(name)
         except BaseException as err:
             self.log.error('Error retrieving metadata configuration for {}'.format(name), exc_info=True)
-            raise RuntimeError('Error retrieving metadata configuration for {}', err) from err
+            raise RuntimeError('Error retrieving metadata configuration for {}'.format(name)) from err
