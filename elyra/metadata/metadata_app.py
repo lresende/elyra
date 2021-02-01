@@ -244,7 +244,7 @@ class NamespaceInstall(NamespaceBase):
 class SubcommandBase(AppBase):
     """Handles building the appropriate subcommands based on existing namespaces."""
 
-    subcommand_desciption = None  # Overridden in subclass
+    subcommand_description = None  # Overridden in subclass
     namespace_base_class = None  # Overridden in subclass
 
     def __init__(self, **kwargs):
@@ -255,11 +255,11 @@ class SubcommandBase(AppBase):
         # This requires a new subclass of the NamespaceList class with an appropriate description
         self.subcommands = {}
         for namespace, schemas in self.namespace_schemas.items():
-            subcommand_desciption = self.subcommand_desciption.format(namespace=namespace)
+            subcommand_description = self.subcommand_description.format(namespace=namespace)
             # Create the appropriate namespace class, initialized with its description,
             # namespace, and corresponding schemas as attributes,
             namespace_class = type(namespace, (self.namespace_base_class,),
-                                   {'description': subcommand_desciption,
+                                   {'description': subcommand_description,
                                     'namespace': namespace,
                                     'schemas': schemas})
             self.subcommands[namespace] = (namespace_class, namespace_class.description)
@@ -281,7 +281,7 @@ class List(SubcommandBase):
     """Lists a metadata instances of a given namespace."""
 
     description = "List metadata instances for a given namespace."
-    subcommand_desciption = "List installed metadata for {namespace}."
+    subcommand_description = "List installed metadata for {namespace}."
     namespace_base_class = NamespaceList
 
     def __init__(self, **kwargs):
@@ -292,7 +292,7 @@ class Remove(SubcommandBase):
     """Removes a metadata instance from a given namespace."""
 
     description = "Remove a metadata instance from a given namespace."
-    subcommand_desciption = "Remove a metadata instance from namespace '{namespace}'."
+    subcommand_description = "Remove a metadata instance from namespace '{namespace}'."
     namespace_base_class = NamespaceRemove
 
     def __init__(self, **kwargs):
@@ -303,7 +303,7 @@ class Install(SubcommandBase):
     """Installs a metadata instance into a given namespace."""
 
     description = "Install a metadata instance into a given namespace."
-    subcommand_desciption = "Install a metadata instance into namespace '{namespace}'."
+    subcommand_description = "Install a metadata instance into namespace '{namespace}'."
     namespace_base_class = NamespaceInstall
 
     def __init__(self, **kwargs):
