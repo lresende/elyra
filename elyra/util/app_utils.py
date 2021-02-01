@@ -83,6 +83,14 @@ class Option(object):
     def print_description(self):
         print("\t{}".format(self.description))
 
+    def __str__(self):
+        return f"Option: {self.cli_option}\n" \
+               f"Name: {self.name}\n" \
+               f"Description: {self.description}\n" \
+               f"Value: {self.value}\n" \
+               f"Required: {self.required}\n" \
+               f"Type: {self.type}\n"
+
 
 class CliOption(Option):
     """
@@ -90,6 +98,9 @@ class CliOption(Option):
     """
     def __init__(self, cli_option, **kwargs):
         super(CliOption, self).__init__(cli_option, **kwargs)
+
+    def __str__(self):
+        return super(CliOption, self).__str__()
 
 
 class Flag(Option):
@@ -99,14 +110,18 @@ class Flag(Option):
     def __init__(self, flag, **kwargs):
         super(Flag, self).__init__(flag, type="boolean", **kwargs)
 
+    def __str__(self):
+        return super(Flag, self).__str__()
+
 
 class AppBase(object):
     """
     Base class for application-level classes.  Provides logging, arguments handling,
     help methods, and anything common to its derived classes.
     """
-    subcommands = {}
+    name = None
     description = None
+    subcommands = {}
     argv = []
     argv_mappings = {}  # Contains separation of argument name to value
 
@@ -116,7 +131,9 @@ class AppBase(object):
         self.log = logging.getLogger()  # setup logger so that metadata service logging is displayed
 
     def _get_argv_mappings(self):
-        """Walk argv and build mapping from argument to value for later processing. """
+        """
+        Walk argv and build mapping from argument to value for later processing.
+        """
         log_option = None
         for arg in self.argv:
             if '=' in arg:
@@ -171,10 +188,11 @@ class AppBase(object):
         self.exit(1)
 
     def process_cli_option(self, cli_option, check_help=False):
-        """Check if the given option exists in the current arguments.  If found set its
-           the Option instance's value to that of the argv.  Once processed, update the
-           argv lists by removing the option.  If the option is a required property and
-           is not in the argv lists or does not have a value, exit.
+        """
+        Check if the given option exists in the current arguments.  If found set its
+        the Option instance's value to that of the argv.  Once processed, update the
+        argv lists by removing the option.  If the option is a required property and
+        is not in the argv lists or does not have a value, exit.
         """
         # if check_help is enabled, check the arguments for help options and
         # exit if found. This is only necessary when processing invidual options.
@@ -209,8 +227,9 @@ class AppBase(object):
         cli_option.processed = True
 
     def process_cli_options(self, cli_options):
-        """For each Option instance in the list, process it according to the argv lists.
-           After traversal, if arguments still remain, log help and exit.
+        """
+        For each Option instance in the list, process it according to the argv lists.
+        After traversal, if arguments still remain, log help and exit.
         """
         # Since we're down to processing options (no subcommands), scan the arguments
         # for help entries and, if found, exit with the help message.
@@ -227,9 +246,10 @@ class AppBase(object):
             self.log_and_exit(msg, display_help=True)
 
     def has_help(self):
-        """Checks the arguments to see if any match the help options.
-           We do this by converting two lists to sets and checking if
-           there's an intersection.
+        """
+        Checks the arguments to see if any match the help options.
+        We do this by converting two lists to sets and checking if
+        there's an intersection.
         """
         helps = set(['--help', '-h'])
         args = set(self.argv_mappings.keys())
@@ -237,8 +257,9 @@ class AppBase(object):
         return len(help_list) > 0
 
     def _remove_argv_entry(self, cli_option):
-        """Removes the argument entry corresponding to cli_option in both
-           self.argv and self.argv_mappings
+        """
+        Removes the argument entry corresponding to cli_option in both
+        self.argv and self.argv_mappings
         """
         # build the argv entry from the mappings since it must be located with name=value
         if cli_option not in self.argv_mappings.keys():
@@ -261,8 +282,8 @@ class AppBase(object):
         print()
         print("Subcommands")
         print("-----------")
-        print("Subcommands are launched as `elyra-metadata cmd [args]`. For information on")
-        print("using subcommand 'cmd', run: `elyra-metadata cmd -h`.")
+        print(f"Subcommands are launched as `{self.name} cmd [args]`. For information on")
+        print(f"using subcommand 'cmd', run: `{self.name} cmd -h`.")
         print()
         for subcommand, desc in self.subcommands.items():
             print(subcommand)
