@@ -114,7 +114,7 @@ class Run(PipelineSubcommandBase):
             raise re
 
     def print_help(self):
-        super(AppBase, self).print_help()
+        super(Run, self).print_help()
         self.print_subcommands()
 
 
