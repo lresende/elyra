@@ -195,7 +195,7 @@ class AppBase(object):
         is not in the argv lists or does not have a value, exit.
         """
         # if check_help is enabled, check the arguments for help options and
-        # exit if found. This is only necessary when processing invidual options.
+        # exit if found. This is only necessary when processing individual options.
         if check_help and self.has_help():
             self.log_and_exit(display_help=True)
 
@@ -215,6 +215,7 @@ class AppBase(object):
                         if cli_option.value not in cli_option.one_of:
                             self.log_and_exit("Parameter '{}' requires one of the following values: {}".
                                               format(cli_option.cli_option, cli_option.one_of), display_help=True)
+
             self._remove_argv_entry(option)
         elif cli_option.required and cli_option.value is None:
             if cli_option.one_of is None:
