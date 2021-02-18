@@ -48,6 +48,37 @@ class NamespaceBase(AppBase):
         # Process client options since all subclasses are option processer
         self.process_cli_options(self.options)
 
+    @staticmethod
+    def schema_to_options(schema):
+        """Takes a JSON schema and builds a list of SchemaProperty instances corresponding to each
+           property in the schema.  There are two sections of properties, one that includes
+           schema_name and display_name and another within the metadata container - which
+           will be separated by class type - SchemaProperty vs. MetadataSchemaProperty.
+        """
+        options = {}
+        properties = schema['properties']
+        for name, value in properties.items():
+            if name == 'schema_name':  # already have this option, skip
+                continue
+            if name != 'metadata':
+                options[name] = SchemaProperty(name, value)
+            else:  # process metadata properties...
+                metadata_properties = properties['metadata']['properties']
+                for md_name, md_value in metadata_properties.items():
+                    options[md_name] = MetadataSchemaProperty(md_name, md_value)
+
+        # Now set required-ness on MetadataProperties and top-level Properties
+        required_props = properties['metadata'].get('required')
+        for required in required_props:
+            options.get(required).required = True
+
+        required_props = schema.get('required')
+        for required in required_props:
+            # skip schema_name & metadata, already required, and metadata is not an option to be presented
+            if required not in ['schema_name', 'metadata']:
+                options.get(required).required = True
+        return list(options.values())
+
 
 class NamespaceList(NamespaceBase):
     """Handles the 'list' subcommand functionality for a specific namespace."""

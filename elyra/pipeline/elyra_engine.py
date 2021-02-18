@@ -79,4 +79,4 @@ class ElyraEngine(NBClientEngine):
             kernel_kwargs['kernel_name'] = kernel_name
             kernel_kwargs['path'] = kwargs.get('kernel_cwd')
 
-        return PapermillNotebookClient(nb_man, **final_kwargs).execute(**kernel_kwargs)
+        return PapermillNotebookClient(nb_man=nb_man, **final_kwargs).execute(**kernel_kwargs)

@@ -21,4 +21,6 @@ from .processor import PipelineProcessorRegistry, PipelineProcessorManager, Pipe
     PipelineProcessorResponse, RuntimePipelineProcess
 from .processor_kfp import KfpPipelineProcessor
 from .processor_local import LocalPipelineProcessor
-from .processor_airflow import AirflowPipelineProcessor
+
+# cause clis to fail due to black formatting error
+# from .processor_airflow import AirflowPipelineProcessor
