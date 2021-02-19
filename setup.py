@@ -60,6 +60,7 @@ setup_args = dict(
     install_requires=[
         'autopep8',
         'entrypoints>=0.3',
+        'click~=7.0',
         'jinja2>=2.11,<3.0',
         'jsonschema>=3.2.0',
         'jupyter_core>=4.0,<5.0',
@@ -107,9 +108,14 @@ setup_args = dict(
     ),
     entry_points={
         'console_scripts': [
-            'elyra-metadata = elyra.metadata.metadata_app:MetadataApp.main',
-            'elyra-pipeline = elyra.pipeline.pipeline_app:PipelineApp.main',
+            'elyra = elyra.cli.elyra_app:main',
+            # 'elyra-metadata = elyra.metadata.metadata_app:MetadataApp.main',
+            # 'elyra-pipeline = elyra.pipeline.pipeline_app:PipelineApp.main',
         ],
+        # 'elyra.scripts': [
+        #   'metadata = elyra.metadata.metadata_app:MetadataApp.main',
+        #   'pipeline = elyra.pipeline.pipeline_app:PipelineApp.main',
+        # ],
         'elyra.pipeline.processors': [
             'local = elyra.pipeline.processor_local:LocalPipelineProcessor',
             'airflow = elyra.pipeline.processor_airflow:AirflowPipelineProcessor',
