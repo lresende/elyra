@@ -47,6 +47,7 @@ import {
 import { BoxLayout, PanelLayout, Widget } from '@lumino/widgets';
 
 import { KernelDropdown } from './KernelDropdown';
+import { ScriptEditorController } from './ScriptEditorController';
 import { ScriptRunner } from './ScriptRunner';
 
 /**
@@ -101,7 +102,9 @@ export class PythonFileEditor extends DocumentWidget<
       tooltip: 'Save file contents'
     });
 
-    const dropDown = new KernelDropdown(this.runner, this.updateSelectedKernel);
+    const controller = new ScriptEditorController();
+    const kernelSpecs = await controller.getKernelSpecsByLanguage('python');
+    const dropDown = new KernelDropdown(kernelSpecs);
 
     const runButton = new ToolbarButton({
       className: RUN_BUTTON_CLASS,

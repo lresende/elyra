@@ -13,3 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import { KernelSpec, KernelSpecManager } from '@jupyterlab/services';
+
+export class ScriptEditorController {
+  kernelSpecManager: KernelSpecManager;
+
+  constructor() {
+    this.kernelSpecManager = new KernelSpecManager();
+  }
+
+  /**
+   * Get available kernelspecs.
+   */
+  getKernelSpecs = async (): Promise<KernelSpec.ISpecModels> => {
+    await this.kernelSpecManager.ready;
+    const kernelSpecs = await this.kernelSpecManager.specs;
+    return kernelSpecs;
+  };
+
+  /**
+   * Get available kernelspecs by language.
+   */
+  getKernelSpecsByLanguage = async (
+    language: string
+  ): Promise<KernelSpec.ISpecModels> => {
+    const specs: KernelSpec.ISpecModels = await this.getKernelSpecs();
+    Object.entries(specs.kernelspecs)
+      .filter(entry => entry[1].language.includes(language) === false)
+      .forEach(entry => delete specs.kernelspecs[entry[0]]);
+
+    return specs;
+  };
+}

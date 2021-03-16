@@ -19,101 +19,74 @@ import { KernelSpec } from '@jupyterlab/services';
 import { HTMLSelect } from '@jupyterlab/ui-components';
 import React from 'react';
 
-import { ScriptRunner } from './ScriptRunner';
-
 const DROPDOWN_CLASS = 'jp-Notebook-toolbarCellTypeDropdown bp3-minimal';
 
 /**
  * Class: Holds properties for toolbar dropdown.
  */
 class DropDownProps {
-  runner: ScriptRunner;
-  updateKernel: Function;
-}
-
-/**
- * Class: Holds kernel state property.
- */
-class DropDownState {
   kernelSpecs: KernelSpec.ISpecModels;
 }
 
 /**
  * Class: A toolbar dropdown component populated with available kernel specs.
  */
-class DropDown extends React.Component<DropDownProps, DropDownState> {
-  private updateKernel: Function;
-  private kernelOptionElems: Record<string, any>[];
+class DropDown extends React.Component<DropDownProps, string> {
+  readonly specs: KernelSpec.ISpecModels;
+  // private updateKernel: Function;
 
   /**
    * Construct a new dropdown widget.
    */
   constructor(props: DropDownProps) {
     super(props);
-    this.state = { kernelSpecs: null };
-    this.updateKernel = this.props.updateKernel;
-    this.kernelOptionElems = [];
-    this.getKernelSpecs();
+    this.specs = props.kernelSpecs;
+    this.state = props.kernelSpecs.default;
+    // this.updateKernel = this.props.updateKernel;
   }
 
-  /**
-   * Function: Gets kernel specs and state.
-   */
-  private async getKernelSpecs(): Promise<void> {
-    const specs: KernelSpec.ISpecModels = await this.props.runner.getKernelSpecs();
-    this.filterPythonKernels(specs);
-
-    // Set kernel to default
-    this.updateKernel(specs.default);
-
-    this.createOptionElems(specs);
-    this.setState({ kernelSpecs: specs });
-  }
-
-  /**
-   * Function: Filters for python kernel specs only.
-   */
-  private filterPythonKernels = (specs: KernelSpec.ISpecModels): void => {
-    Object.entries(specs.kernelspecs)
-      .filter(entry => entry[1].language.includes('python') === false)
-      .forEach(entry => delete specs.kernelspecs[entry[0]]);
+  getSelected = (): string => {
+    return this.state;
   };
 
   /**
-   * Function: Creates drop down options with available python kernel specs.
+   * Handles kernel selection from dropdown options.
    */
-  private createOptionElems = (specs: KernelSpec.ISpecModels): void => {
+  private handleSelection = (event: any): void => {
+    const selection: string = event.target.value;
+    this.setState(selection);
+  };
+
+  /**
+   * Creates drop down options with available kernel specs.
+   */
+  private createOptionElements = (): Record<string, any>[] => {
+    let kernelOptionElements: Record<string, any>[];
     let i = 0;
-    for (const name of Object.keys(specs.kernelspecs)) {
-      const spec = specs.kernelspecs[name];
+    for (const name of Object.keys(this.specs.kernelspecs)) {
+      const spec = this.specs.kernelspecs[name];
       const displayName = spec.display_name ? spec.display_name : name;
       const elem = React.createElement(
         'option',
         { key: i++, value: name },
         displayName
       );
-      this.kernelOptionElems.push(elem);
+      kernelOptionElements.push(elem);
     }
-  };
 
-  /**
-   * Function: Handles kernel selection from dropdown options.
-   */
-  private handleSelection = (event: any): void => {
-    const selection: string = event.target.value;
-    this.updateKernel(selection);
+    return kernelOptionElements;
   };
 
   render(): React.ReactElement {
-    return this.state.kernelSpecs
+    return this.specs.kernelspecs
       ? React.createElement(
           HTMLSelect,
           {
             className: DROPDOWN_CLASS,
             onChange: this.handleSelection.bind(this),
-            defaultValue: this.state.kernelSpecs.default
+            defaultValue: this.specs.default
           },
-          this.kernelOptionElems
+          this.createOptionElements
         )
       : React.createElement('span', null, 'Fetching kernel specs...');
   }
@@ -123,21 +96,17 @@ class DropDown extends React.Component<DropDownProps, DropDownState> {
  * Class: A CellTypeSwitcher widget that renders the Dropdown component.
  */
 export class KernelDropdown extends ReactWidget {
-  private runner: ScriptRunner;
-  private updateKernel: Function;
+  private kernelSpecs: KernelSpec.ISpecModels;
 
   /**
    * Construct a new CellTypeSwitcher widget.
    */
-  constructor(runner: ScriptRunner, updateKernel: Function) {
+  constructor(kernelSpecs: KernelSpec.ISpecModels) {
     super();
-    this.runner = runner;
-    this.updateKernel = updateKernel;
+    this.kernelSpecs = kernelSpecs;
   }
 
   render(): React.ReactElement {
-    return (
-      <DropDown {...{ runner: this.runner, updateKernel: this.updateKernel }} />
-    );
+    return <DropDown {...{ kernelSpecs: this.kernelSpecs }} />;
   }
 }
