@@ -28,6 +28,7 @@ def valid_operation():
                      name='{{label}}',
                      filename='{{filename}}',
                      runtime_image='{{runtime_image}}',
+                     parameters=["param1=var1", "param2=var2"],
                      env_vars=["var1=var1", "var2=var2"],
                      dependencies=["a.txt", "b.txt", "c.txt"],
                      outputs=["d.txt", "e.txt", "f.txt"],

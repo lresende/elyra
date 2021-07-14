@@ -6,10 +6,11 @@
     "cpu": null,
     "gpu": null,
     "memory": null,
-    "outputs": [],
+    "parameters": [],
     "env_vars": [],
     "dependencies": [],
-    "include_subdirectories": false
+    "include_subdirectories": false,
+    "outputs": []
   },
   "parameters": [
     {
@@ -31,13 +32,16 @@
       "id": "memory"
     },
     {
+      "id": "parameters"
+    },
+    {
+      "id": "env_vars"
+    },
+    {
       "id": "dependencies"
     },
     {
       "id": "include_subdirectories"
-    },
-    {
-      "id": "env_vars"
     },
     {
       "id": "outputs"
@@ -141,6 +145,38 @@
         }
       },
       {
+        "parameter_ref": "parameters",
+        "control": "custom",
+        "custom_control_id": "StringArrayControl",
+        "label": {
+          "default": "Parameters"
+        },
+        "description": {
+          "default": "Parameters to be passed during execution.",
+          "placement": "on_panel"
+        },
+        "data": {
+          "placeholder": "parameter=VALUE",
+          "canRefresh": false
+        }
+      },
+      {
+        "parameter_ref": "env_vars",
+        "control": "custom",
+        "custom_control_id": "StringArrayControl",
+        "label": {
+          "default": "Environment Variables"
+        },
+        "description": {
+          "default": "Environment variables to be set on the execution environment.",
+          "placement": "on_panel"
+        },
+        "data": {
+          "placeholder": "env_var=VALUE",
+          "canRefresh": true
+        }
+      },
+      {
         "parameter_ref": "dependencies",
         "control": "custom",
         "custom_control_id": "StringArrayControl",
@@ -166,22 +202,6 @@
         },
         "data": {
           "description": "Recursively include subdirectories when submitting a pipeline (This may increase submission time)."
-        }
-      },
-      {
-        "parameter_ref": "env_vars",
-        "control": "custom",
-        "custom_control_id": "StringArrayControl",
-        "label": {
-          "default": "Environment Variables"
-        },
-        "description": {
-          "default": "Environment variables to be set on the execution environment.",
-          "placement": "on_panel"
-        },
-        "data": {
-          "placeholder": "env_var=VALUE",
-          "canRefresh": true
         }
       },
       {
@@ -226,6 +246,16 @@
             "parameter_refs": ["cpu", "gpu", "memory"]
           },
           {
+            "id": "parameters",
+            "type": "controls",
+            "parameter_refs": ["parameters"]
+          },
+          {
+            "id": "env_vars",
+            "type": "controls",
+            "parameter_refs": ["env_vars"]
+          },
+          {
             "id": "dependencies",
             "type": "controls",
             "parameter_refs": ["dependencies"]
@@ -234,11 +264,6 @@
             "id": "include_subdirectories",
             "type": "controls",
             "parameter_refs": ["include_subdirectories"]
-          },
-          {
-            "id": "env_vars",
-            "type": "controls",
-            "parameter_refs": ["env_vars"]
           },
           {
             "id": "outputs",

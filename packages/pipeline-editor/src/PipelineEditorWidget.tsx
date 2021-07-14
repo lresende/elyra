@@ -218,13 +218,6 @@ const PipelineWrapper: React.FC<IProps> = ({
   const [pipeline, setPipeline] = useState<any>(null);
   const [panelOpen, setPanelOpen] = React.useState(false);
   const [alert, setAlert] = React.useState('');
-  // const pipelineRuntime = pipeline?.pipelines?.[0]?.app_data?.runtime
-  //   ? {
-  //       name: pipeline?.pipelines?.[0]?.app_data?.runtime,
-  //       display_name:
-  //         pipeline?.pipelines?.[0]?.app_data?.ui_data?.runtime?.display_name
-  //     }
-  //   : null;
 
   const pipelineRuntimeName = pipeline?.pipelines?.[0]?.app_data?.runtime;
   const pipelineRuntimeDisplayName =

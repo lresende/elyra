@@ -261,6 +261,7 @@ class ScriptOperationProcessor(FileOperationProcessor):
         self.log.debug(f'Processing {self._script_type} script: {filepath}')
 
         argv = self.get_argv(filepath)
+        argv.extend(operation.parameters_as_dict().values())
         envs = OperationProcessor._collect_envs(operation, elyra_run_name)
         t0 = time.time()
         try:

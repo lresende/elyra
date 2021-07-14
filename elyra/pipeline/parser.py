@@ -159,9 +159,10 @@ class PipelineParser(LoggingConfigurable):
             memory=PipelineParser._get_app_data_field(node, 'memory'),
             filename=PipelineParser._get_app_data_field(node, 'filename'),
             runtime_image=PipelineParser._get_app_data_field(node, 'runtime_image'),
+            parameters=PipelineParser._scrub_list(PipelineParser._get_app_data_field(node, 'parameters', [])),
+            env_vars=PipelineParser._scrub_list(PipelineParser._get_app_data_field(node, 'env_vars', [])),
             dependencies=PipelineParser._scrub_list(PipelineParser._get_app_data_field(node, 'dependencies', [])),
             include_subdirectories=PipelineParser._get_app_data_field(node, 'include_subdirectories', False),
-            env_vars=PipelineParser._scrub_list(PipelineParser._get_app_data_field(node, 'env_vars', [])),
             outputs=PipelineParser._scrub_list(PipelineParser._get_app_data_field(node, 'outputs', [])),
             parent_operations=parent_operations,
             component_source=PipelineParser._get_app_data_field(node, 'component_source'),
@@ -181,7 +182,9 @@ class PipelineParser(LoggingConfigurable):
 
     @staticmethod
     def _get_app_data_field(obj: Dict, field_name: str, default_value: Any = None) -> Any:
-        """Helper method to pull the field's value from the app_data child of object obj."""
+        """
+        Helper method to pull the field's value from the app_data child of object obj.
+        """
         return PipelineParser._get_child_field(obj, 'app_data', field_name, default_value=default_value)
 
     @staticmethod
@@ -261,8 +264,9 @@ class PipelineParser(LoggingConfigurable):
                     continue
 
                 # Do not include any of the standard set of parameters
-                if key in ["filename", "runtime_image", "cpu", "gpu", "memory", "dependencies", "env_vars", "outputs",
-                           "include_subdirectories", "ui_data", "component_source", "component_source_type", "label",
+                if key in ["filename", "runtime_image", "cpu", "gpu", "memory", "dependencies", "parameters",
+                           "env_vars", "outputs", "include_subdirectories", "ui_data",
+                           "component_source", "component_source_type", "label",
                            "image", "description", "properties", "invalidNodeError", "runtime"]:
 
                     continue

@@ -27,9 +27,10 @@ class Operation(object):
 
     standard_node_types = ["execute-notebook-node", "execute-python-node", "exeucute-r-node"]
 
-    def __init__(self, id, type, name, classifier, filename, runtime_image, memory=None, cpu=None, gpu=None,
-                 dependencies=None, include_subdirectories: bool = False, env_vars=None, inputs=None, outputs=None,
-                 parent_operations=None, component_source=None, component_source_type=None, component_params=None):
+    def __init__(self, id, type, name, classifier, filename, runtime_image, cpu=None, gpu=None, memory=None,
+                 parameters=None, env_vars=None, dependencies=None, include_subdirectories: bool = False,
+                 inputs=None, outputs=None, parent_operations=None, component_source=None,
+                 component_source_type=None, component_params=None):
         """
         :param id: Generated UUID, 128 bit number used as a unique identifier
                    e.g. 123e4567-e89b-12d3-a456-426614174000
@@ -40,17 +41,19 @@ class Operation(object):
                          to be executed e.g. path/to/file.ext
         :param runtime_image: The DockerHub image to be used for the operation
                                e.g. user/docker_image_name:tag
+        :param cpu: number of cpus requested to run the operation
+        :param gpu: number of gpus requested to run the operation
+        :param memory: amount of memory requested to run the operation (in Gi)
         :param dependencies: List of local files/directories needed for the operation to run
                              and packaged into each operation's dependency archive
         :param include_subdirectories: Include or Exclude subdirectories when packaging our 'dependencies'
+        :param parameters: List of parameters to be used when executing
+                         e.g. FOO="BAR"
         :param env_vars: List of Environmental variables to set in the docker image
                          e.g. FOO="BAR"
         :param inputs: List of files to be consumed by this operation, produced by parent operation(s)
         :param outputs: List of files produced by this operation to be included in a child operation(s)
         :param parent_operations: List of parent operation 'ids' required to execute prior to this operation
-        :param cpu: number of cpus requested to run the operation
-        :param memory: amount of memory requested to run the operation (in Gi)
-        :param gpu: number of gpus requested to run the operation
         :param component_source_type: source type of a non-standard component, either filepath or url
         :param component_params: dictionary of parameter key:value pairs that are used in the creation of a
                                  a non-standard operation instance
@@ -82,15 +85,16 @@ class Operation(object):
         self._name = name
         self._filename = filename
         self._runtime_image = runtime_image
-        self._dependencies = dependencies or []
-        self._include_subdirectories = include_subdirectories
-        self._env_vars = env_vars or []
-        self._inputs = inputs or []
-        self._outputs = outputs or []
-        self._parent_operations = parent_operations or []
         self._cpu = cpu
         self._gpu = gpu
         self._memory = memory
+        self._parameters = parameters or []
+        self._env_vars = env_vars or []
+        self._dependencies = dependencies or []
+        self._include_subdirectories = include_subdirectories
+        self._inputs = inputs or []
+        self._outputs = outputs or []
+        self._parent_operations = parent_operations or []
         self._component_source = component_source
         self._component_source_type = component_source_type
         self._component_params = component_params
@@ -123,28 +127,47 @@ class Operation(object):
         return self._runtime_image
 
     @property
-    def dependencies(self):
-        return self._dependencies
-
-    @property
-    def include_subdirectories(self):
-        return self._include_subdirectories
-
-    @property
-    def env_vars(self):
-        return self._env_vars
-
-    @property
     def cpu(self):
         return self._cpu
+
+    @property
+    def gpu(self):
+        return self._gpu
 
     @property
     def memory(self):
         return self._memory
 
     @property
-    def gpu(self):
-        return self._gpu
+    def parameters(self):
+        return self._parameters
+
+    def parameters_as_dict(self, logger: Optional[Logger] = None) -> Dict:
+        """
+        Operation stores environment variables in a list of name=value pairs, while
+        subprocess.run() requires a dictionary - so we must convert.  If no envs are
+        configured on the Operation, an empty dictionary is returned, otherwise envs
+        configured on the Operation are converted to dictionary entries and returned.
+        """
+        parameters = {}
+        for nv in self.parameters:
+            if nv:
+                nv_pair = nv.split("=", 1)
+                if len(nv_pair) == 2 and nv_pair[0].strip():
+                    if len(nv_pair[1]) > 0:
+                        parameters[nv_pair[0]] = nv_pair[1]
+                    else:
+                        Operation._log_info(f"Skipping inclusion of parameter: "
+                                            f"`{nv_pair[0]}` has no value...",
+                                            logger=logger)
+                else:
+                    Operation._log_warning(f"Could not process parameter entry `{nv}`, skipping...",
+                                           logger=logger)
+        return parameters
+
+    @property
+    def env_vars(self):
+        return self._env_vars
 
     def env_vars_as_dict(self, logger: Optional[Logger] = None) -> Dict:
         """
@@ -168,6 +191,14 @@ class Operation(object):
                     Operation._log_warning(f"Could not process environment variable entry `{nv}`, skipping...",
                                            logger=logger)
         return envs
+
+    @property
+    def dependencies(self):
+        return self._dependencies
+
+    @property
+    def include_subdirectories(self):
+        return self._include_subdirectories
 
     @staticmethod
     def _log_info(msg: str, logger: Optional[Logger] = None):
@@ -227,41 +258,46 @@ class Operation(object):
                 self.name == other.name and \
                 self.filename == other.filename and \
                 self.runtime_image == other.runtime_image and \
+                self.cpu == other.cpu and \
+                self.gpu == other.gpu and \
+                self.memory == other.memory and \
+                self.parameters == other.parameters and \
                 self.env_vars == other.env_vars and \
                 self.dependencies == other.dependencies and \
                 self.include_subdirectories == other.include_subdirectories and \
-                self.outputs == other.outputs and \
                 self.inputs == other.inputs and \
-                self.parent_operations == other.parent_operations and \
-                self.cpu == other.cpu and \
-                self.gpu == other.gpu and \
-                self.memory == other.memory
+                self.outputs == other.outputs and \
+                self.parent_operations == other.parent_operations
         return False
 
     def __str__(self) -> str:
         return "componentID : {id} \n " \
                "name : {name} \n " \
-               "parent_operations : {parent_op} \n " \
-               "dependencies : {depends} \n " \
-               "dependencies include subdirectories : {inc_subdirs} \n " \
                "filename : {filename} \n " \
-               "inputs : {inputs} \n " \
-               "outputs : {outputs} \n " \
                "image : {image} \n " \
+               "cpu : {cpu} \n " \
                "gpu: {gpu} \n " \
                "memory: {memory} \n " \
-               "cpu : {cpu} \n ".format(id=self.id,
-                                        name=self.name,
-                                        parent_op=self.parent_operations,
-                                        depends=self.dependencies,
-                                        inc_subdirs=self.include_subdirectories,
-                                        filename=self.filename,
-                                        inputs=self.inputs,
-                                        outputs=self.outputs,
-                                        image=self.runtime_image,
-                                        gpu=self.gpu,
-                                        cpu=self.cpu,
-                                        memory=self.memory)
+               "parameters: {parameters} \n " \
+               "environment variables: {env_vars} \n " \
+               "dependencies : {dependencies} \n " \
+               "dependencies include subdirectories : {inc_subdirs} \n " \
+               "inputs : {inputs} \n " \
+               "outputs : {outputs} \n " \
+               "parent_operations : {parent_op}".format(id=self.id,
+                                                        name=self.name,
+                                                        filename=self.filename,
+                                                        image=self.runtime_image,
+                                                        cpu=self.cpu,
+                                                        gpu=self.gpu,
+                                                        memory=self.memory,
+                                                        parameters=self.parameters,
+                                                        env_vars=self.env_vars,
+                                                        dependencies=self.dependencies,
+                                                        inc_subdirs=self.include_subdirectories,
+                                                        inputs=self.inputs,
+                                                        outputs=self.outputs,
+                                                        parent_op=self.parent_operations)
 
 
 class Pipeline(object):
