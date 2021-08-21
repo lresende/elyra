@@ -30,6 +30,7 @@ from elyra._version import __version__
 from elyra.metadata.manager import MetadataManager
 from elyra.metadata.schema import SchemaManager
 from elyra.pipeline.parser import PipelineParser
+from elyra.pipeline.pipeline import PipelineDefinition
 from elyra.pipeline.processor import PipelineProcessorManager
 from elyra.pipeline.validation import PipelineValidationManager
 from elyra.pipeline.validation import ValidationSeverity
@@ -93,32 +94,15 @@ def _preprocess_pipeline(pipeline_path: str,
     pipeline_dir = os.path.dirname(pipeline_abs_path)
     pipeline_name = os.path.splitext(os.path.basename(pipeline_abs_path))[0]
 
-    if not os.path.exists(pipeline_abs_path):
-        raise click.ClickException(f"Pipeline file not found: '{pipeline_abs_path}'\n")
-
-    with open(pipeline_abs_path) as f:
-        try:
-            pipeline_definition = json.load(f)
-        except ValueError as ve:
-            raise click.ClickException(f"Pipeline file is invalid: \n {ve}")
-
-    if 'pipelines' not in pipeline_definition:
-        raise click.ClickException("Pipeline is missing 'pipelines' field.")
-    if len(pipeline_definition['pipelines']) == 0:
-        raise click.ClickException("Pipeline has zero length 'pipelines' field.")
-
-    # Find primary pipeline
-    primary_pipeline_key = pipeline_definition['primary_pipeline']
-    primary_pipeline = None
-
-    for pipeline in pipeline_definition["pipelines"]:
-        if pipeline['id'] == primary_pipeline_key:
-            primary_pipeline = pipeline
-
-    assert primary_pipeline is not None, f"No primary pipeline was found in {pipeline_path}"
+    try:
+        # Find primary pipeline
+        pipeline_definition = PipelineDefinition(pipeline_path=pipeline_abs_path)
+        primary_pipeline = pipeline_definition.primary_pipeline
+    except Exception as e:
+        raise click.ClickException(e)
 
     try:
-        for pipeline in pipeline_definition["pipelines"]:
+        for pipeline in pipeline_definition.pipeline_json["pipelines"]:
             for node in pipeline["nodes"]:
                 if 'filename' in node["app_data"]["component_parameters"]:
                     abs_path = os.path.join(pipeline_dir, node["app_data"]["component_parameters"]["filename"])
@@ -143,7 +127,7 @@ def _preprocess_pipeline(pipeline_path: str,
     if runtime_config:
         primary_pipeline["app_data"]["runtime-config"] = runtime_config
 
-    return pipeline_definition
+    return pipeline_definition.pipeline_json
 
 
 def _print_issues(issues):

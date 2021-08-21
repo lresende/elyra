@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import json
 from logging import Logger
 import os
 import sys
@@ -376,3 +377,95 @@ class Pipeline(object):
                 self.runtime == other.runtime and \
                 self.runtime_config == other.runtime_config and \
                 self.operations == other.operations
+
+
+class PipelineDefinition(object):
+    """
+    Represents a helper class to manipulate pipeline json structure
+    """
+
+    def __init__(self, pipeline_path: Optional[str] = None, pipeline_definition: Optional[Dict] = None):
+        """
+        The constructor enables either passing a pipeline path or the content of the pipeline definition.
+
+        """
+        if not pipeline_path and not pipeline_definition:
+            # at least one parameter should be provided
+            raise ValueError("At least one parameter must be provided ('pipeline_path' or 'pipeline_definition')")
+        if pipeline_path and pipeline_definition:
+            # only one parameter should be provided
+            raise ValueError("Only one parameter should be provided ('pipeline_path' or 'pipeline_definition')")
+
+        if pipeline_path:
+            # supporting loading pipeline from file
+            if not os.path.exists(pipeline_path):
+                raise ValueError(f"Pipeline file not found: '{pipeline_path}'\n")
+
+            with open(pipeline_path) as f:
+                try:
+                    self._pipeline_definition = json.load(f)
+                except ValueError as ve:
+                    raise ValueError(f"Pipeline file is invalid: \n {ve}")
+        else:
+            # supporting passing the pipeline definition directly
+            self._pipeline_definition = pipeline_definition
+
+    @property
+    def pipeline_json(self) -> Dict:
+        return self._pipeline_definition
+
+    @property
+    def primary_pipeline(self) -> Dict:
+        # Find primary pipeline
+        primary_pipeline_key = self._get_field(self._pipeline_definition, 'primary_pipeline')
+        primary_pipeline = None
+
+        if "pipelines" not in self._pipeline_definition:
+            raise ValueError("Pipeline is missing 'pipelines' field.")
+        elif len(self._pipeline_definition['pipelines']) == 0:
+            raise ValueError("Pipeline has zero length 'pipelines' field.")
+
+        for pipeline in self._pipeline_definition["pipelines"]:
+            if pipeline['id'] == primary_pipeline_key:
+                primary_pipeline = pipeline
+
+        assert primary_pipeline is not None, "No primary pipeline was found"
+
+        return primary_pipeline
+
+    @staticmethod
+    def _get_field(obj: Dict, field_name: str, default_value: Any = None) -> Any:
+        """
+        Returns the field's value from the child dictionary of object obj or the default
+        if any portion (child, field) is not present.
+        """
+        return_value = default_value
+        if field_name in obj.keys():
+            return_value = obj.get(field_name, default_value)
+        return return_value
+
+    @staticmethod
+    def _get_child_field(obj: Dict, child: str, field_name: str, default_value: Any = None) -> Any:
+        """
+        Returns the field's value from the child dictionary of object obj or the default
+        if any portion (child, field) is not present.
+        """
+        return_value = default_value
+        if child in obj.keys():
+            return_value = obj[child].get(field_name, default_value)
+        return return_value
+
+    @staticmethod
+    def _get_pipeline_field(obj: Dict, field_name: str, default_value: Any = None) -> Any:
+        """Helper method to pull the field's value from the pipeline child of object obj."""
+        return PipelineDefinition._get_child_field(obj, 'pipeline', field_name, default_value=default_value)
+
+    @staticmethod
+    def _get_app_data_field(obj: Dict, field_name: str, default_value: Any = None) -> Any:
+        """Helper method to pull the field's value from the app_data child of object obj."""
+        return PipelineDefinition._get_child_field(obj, 'app_data', field_name, default_value=default_value)
+
+    @staticmethod
+    def _get_ui_data_field(obj: Dict, field_name: str, default_value: Any = None) -> Any:
+        ui_data = PipelineDefinition._get_child_field(obj, 'app_data', 'ui_data', {})
+        return ui_data.get(field_name, default_value)
