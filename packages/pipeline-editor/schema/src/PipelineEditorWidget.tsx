@@ -48,7 +48,7 @@ import {
   DocumentWidget,
   Context,
 } from '@jupyterlab/docregistry';
-import {IDefaultFileBrowser} from '@jupyterlab/filebrowser';
+import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 import 'carbon-components/css/carbon-components.min.css';
@@ -139,7 +139,7 @@ const getDisplayName = (
 };
 
 class PipelineEditorWidget extends ReactWidget {
-  browserFactory: IDefaultFileBrowser;
+  browserFactory: IFileBrowserFactory;
   shell: ILabShell;
   commands: any;
   addFileToPipelineSignal: Signal<this, any>;
@@ -148,7 +148,7 @@ class PipelineEditorWidget extends ReactWidget {
   settings: ISettingRegistry.ISettings;
 
   constructor(options: any) {
-    super();
+    super(options);
     this.browserFactory = options.browserFactory;
     this.shell = options.shell;
     this.commands = options.commands;
@@ -186,7 +186,7 @@ class PipelineEditorWidget extends ReactWidget {
 
 interface IProps {
   context: DocumentRegistry.Context;
-  browserFactory: IDefaultFileBrowser;
+  browserFactory: IFileBrowserFactory;
   shell: ILabShell;
   commands: any;
   addFileToPipelineSignal: Signal<PipelineEditorWidget, any>;
@@ -433,7 +433,7 @@ const PipelineWrapper: React.FC<IProps> = ({
               } else {
                 showDialog({
                   title: 'Pipeline migration failed!',
-                  body: <p> { (migrationError as Error)?.message || '' } </p>,
+                  body: <p> {migrationError?.message || ''} </p>,
                   buttons: [Dialog.okButton()],
                 }).then(() => {
                   shell.currentWidget?.close();
@@ -465,7 +465,7 @@ const PipelineWrapper: React.FC<IProps> = ({
     );
     if (args.propertyID.includes('dependencies')) {
       const res = await showBrowseFileDialog(
-        browserFactory.model.manager,
+        browserFactory.defaultBrowser.model.manager,
         {
           multiselect: true,
           includeDir: true,
@@ -481,7 +481,7 @@ const PipelineWrapper: React.FC<IProps> = ({
       }
     } else {
       const res = await showBrowseFileDialog(
-        browserFactory.model.manager,
+        browserFactory.defaultBrowser.model.manager,
         {
           startPath: PathExt.dirname(filename),
           filter: (model: any): boolean => {
@@ -1042,7 +1042,7 @@ const PipelineWrapper: React.FC<IProps> = ({
 
   const handleAddFileToPipeline = useCallback(
     (location?: { x: number; y: number }) => {
-      const fileBrowser = browserFactory;
+      const fileBrowser = browserFactory.defaultBrowser;
       // Only add file to pipeline if it is currently in focus
       if (shell.currentWidget?.id !== widgetId) {
         return;
@@ -1104,7 +1104,7 @@ const PipelineWrapper: React.FC<IProps> = ({
 
       return;
     },
-    [browserFactory, defaultPosition, shell, widgetId],
+    [browserFactory.defaultBrowser, defaultPosition, shell, widgetId],
   );
 
   const handleDrop = async (e: IDragEvent): Promise<void> => {
@@ -1177,7 +1177,7 @@ const PipelineWrapper: React.FC<IProps> = ({
 };
 
 export class PipelineEditorFactory extends ABCWidgetFactory<DocumentWidget> {
-  browserFactory: IDefaultFileBrowser;
+  browserFactory: IFileBrowserFactory;
   shell: ILabShell;
   commands: any;
   addFileToPipelineSignal: Signal<this, any>;
