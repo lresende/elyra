@@ -27,9 +27,9 @@ from typing import Optional
 from typing import Tuple
 from urllib.parse import urlsplit
 
-from kfp.auth import KF_PIPELINES_SA_TOKEN_ENV
-from kfp.auth import KF_PIPELINES_SA_TOKEN_PATH
-from kfp.auth import ServiceAccountTokenVolumeCredentials
+from kfp.client import KF_PIPELINES_SA_TOKEN_ENV
+from kfp.client import KF_PIPELINES_SA_TOKEN_PATH
+from kfp.client import ServiceAccountTokenVolumeCredentials
 import requests
 
 
@@ -230,6 +230,7 @@ class KFPAuthenticator:
         """
 
         kf_url = urlsplit(api_endpoint)._replace(path="").geturl()
+        kf_pipelines_ssl_sa_cert = os.getenv("PIPELINES_SSL_SA_CERTS", None)
 
         # return data structure for successful requests
         auth_info = {
@@ -239,6 +240,7 @@ class KFPAuthenticator:
             "cookies": None,  # passed to KFP SDK client as "cookies" param value
             "credentials": None,  # passed to KFP SDK client as "credentials" param value
             "existing_token": None,  # passed to KFP SDK client as "existing_token" param value
+            "ssl_ca_cert": kf_pipelines_ssl_sa_cert,  # passed to KFP SDK Client as "ssl_ca_cert" param value
         }
 
         try:
