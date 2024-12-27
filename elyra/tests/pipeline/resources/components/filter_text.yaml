@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Component source location: https://raw.githubusercontent.com/kubeflow/pipelines/sdk-2.8.0/components/contrib/sample/Shell_script/component.yaml
+# Component source location: https://raw.githubusercontent.com/kubeflow/pipelines/sdk-2.9.0/components/contrib/sample/Shell_script/component.yaml
 # Component details: Takes a text file and a regex pattern filter to produce a filtered text file
 name: Filter text using shell and grep
 inputs:

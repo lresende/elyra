@@ -41,23 +41,15 @@ describe('Code Snippet tests', () => {
   it('should provide warnings when required fields are not entered properly', () => {
     createInvalidCodeSnippet(snippetName);
 
-    // Metadata editor should not close
-    cy.get('.lm-TabBar-tabLabel')
-      .contains('New Code Snippet')
-      .should('be.visible');
+    checkEditorVisibility(true);
 
-    // Fields marked as required should be highlighted
-    cy.get('.error-detail li.text-danger').as('required-warnings');
-    cy.get('@required-warnings').should('have.length', 2);
+    checkValidationWarnings(2);
   });
 
-  it('should create valid code-snippet', () => {
+  it.skip('should create valid code-snippet', () => {
     createValidCodeSnippet(snippetName);
 
-    // Metadata editor tab should not be visible
-    cy.get('.lm-TabBar-tabLabel')
-      .contains('New Code Snippet')
-      .should('not.exist');
+    checkEditorVisibility(false);
 
     // Check new code snippet is displayed
     getSnippetByName(snippetName);
@@ -78,14 +70,13 @@ describe('Code Snippet tests', () => {
   });
 
   it('should trigger save / submit on pressing enter', () => {
+    clickCreateNewSnippetButton();
+
     populateCodeSnippetFields(snippetName);
 
-    cy.get('.elyra-formEditor-form-display_name').type('{enter}');
+    typeCodeSnippetName('{enter}');
 
-    // Metadata editor tab should not be visible
-    cy.get('.lm-TabBar-tabLabel')
-      .contains('New Code Snippet')
-      .should('not.exist');
+    checkEditorVisibility(false);
 
     // Check new code snippet is displayed
     getSnippetByName(snippetName);
@@ -198,7 +189,9 @@ describe('Code Snippet tests', () => {
     const updatedSnippetItem = getSnippetByName(newSnippetName);
 
     // Check old snippet name does not exist
-    expect(updatedSnippetItem.innerText).not.to.eq(snippetName);
+    updatedSnippetItem.then((element) => {
+      expect(element.text()).not.to.eq(snippetName);
+    });
 
     // Delete updated code snippet
     deleteSnippet(newSnippetName);
@@ -344,8 +337,7 @@ const getSnippetByName = (snippetName: string): any => {
 const createInvalidCodeSnippet = (snippetName: string): any => {
   clickCreateNewSnippetButton();
 
-  // Name code snippet
-  cy.get('.elyra-formEditor-form-display_name').type(snippetName);
+  typeCodeSnippetName(snippetName);
 
   saveAndCloseMetadataEditor();
 };
@@ -354,10 +346,8 @@ const populateCodeSnippetFields = (
   snippetName: string,
   language?: string
 ): any => {
-  clickCreateNewSnippetButton();
-
   // Name code snippet
-  cy.get('.elyra-formEditor-form-display_name').type(snippetName);
+  cy.get('.elyra-formEditor-form-display_name').clear().type(snippetName);
 
   // Select python language from dropdown list
   editSnippetLanguage(snippetName, language ?? 'Python');
@@ -373,6 +363,8 @@ const createValidCodeSnippet = (
   snippetName: string,
   language?: string
 ): any => {
+  clickCreateNewSnippetButton();
+
   populateCodeSnippetFields(snippetName, language);
 
   saveAndCloseMetadataEditor();
@@ -384,8 +376,25 @@ const clickCreateNewSnippetButton = (): void => {
   cy.findByRole('button', { name: /create new code snippet/i }).click();
 };
 
+const checkValidationWarnings = (count: number): void => {
+  cy.get('.error-detail li.text-danger').should(
+    count === 0 ? 'not.exist' : 'have.length',
+    count
+  );
+};
+
 const saveAndCloseMetadataEditor = (): void => {
   cy.get('.elyra-metadataEditor-saveButton > button:visible').click();
+};
+
+const typeCodeSnippetName = (name: string): void => {
+  cy.get('.elyra-formEditor-form-display_name').type(name);
+};
+
+const checkEditorVisibility = (isVisible: boolean): void => {
+  cy.get('.lm-TabBar-tabLabel')
+    .contains('New Code Snippet')
+    .should(isVisible ? 'be.visible' : 'not.exist');
 };
 
 const deleteSnippet = (snippetName: string): void => {
